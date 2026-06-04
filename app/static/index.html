@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image Processor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(135deg,#0a0612 0%,#110d20 40%,#0d1528 100%);min-height:100vh;display:flex;flex-direction:column;color:#e8e6f5}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
+.orb1{position:fixed;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(127,119,221,0.12) 0%,transparent 70%);top:-150px;left:-100px;pointer-events:none;z-index:0}
+.orb2{position:fixed;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(29,158,117,0.08) 0%,transparent 70%);bottom:-100px;right:-80px;pointer-events:none;z-index:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;border-bottom:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.02);backdrop-filter:blur(20px);position:relative;z-index:2}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#7F77DD,#534AB7);display:flex;align-items:center;justify-content:center;color:white;font-size:18px;box-shadow:0 4px 20px rgba(127,119,221,0.45)}
+.logo-text{font-size:15px;font-weight:600;color:#e8e6f5}
+.logo-sub{font-size:11px;color:#6b6f8a;margin-top:1px}
+.badge{font-size:11px;padding:4px 14px;border-radius:20px;border:1px solid rgba(127,119,221,0.3);color:#AFA9EC;background:rgba(127,119,221,0.08)}
+.main{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:1100px;margin:0 auto;width:100%;padding:24px;position:relative;z-index:1}
+.card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:18px;padding:20px;backdrop-filter:blur(12px);margin-bottom:16px;transition:border-color .2s,transform .2s,box-shadow .2s}
+.card:hover{border-color:rgba(127,119,221,0.3);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.sec-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#4a4d6a;display:flex;align-items:center;gap:8px;margin-bottom:14px}
+.num{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#7F77DD,#534AB7);color:white;font-size:9px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 10px rgba(127,119,221,0.45)}
+.drop-zone{border:1.5px dashed rgba(255,255,255,0.1);border-radius:14px;padding:32px 16px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(0,0,0,0.2);position:relative;overflow:hidden}
+.drop-zone::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(127,119,221,0),rgba(127,119,221,0));transition:background .2s;pointer-events:none;border-radius:14px}
+.drop-zone:hover,.drop-zone.over{border-color:rgba(127,119,221,0.55);background:rgba(127,119,221,0.05)}
+.drop-zone:hover::after,.drop-zone.over::after{background:linear-gradient(135deg,rgba(127,119,221,0.04),rgba(83,74,183,0.03))}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:34px;margin-bottom:12px;display:block;background:linear-gradient(135deg,#7F77DD,#AFA9EC);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.drop-title{font-size:14px;font-weight:500;color:#c8c6e0;margin-bottom:5px}
+.drop-sub{font-size:11px;color:#4a4d6a}
+#preview-wrap{display:none;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);box-shadow:0 4px 24px rgba(0,0,0,0.4)}
+#preview-img{width:100%;display:block;max-height:180px;object-fit:contain;background:#0a0612}
+#rm-btn{display:block;width:100%;margin-top:10px;padding:8px;background:rgba(226,75,74,0.08);border:1px solid rgba(226,75,74,0.2);color:#f09595;font-family:inherit;font-size:12px;border-radius:8px;cursor:pointer;transition:all .15s}
+#rm-btn:hover{background:rgba(226,75,74,0.18);border-color:rgba(226,75,74,0.4)}
+.ops-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.op-btn{border:1px solid rgba(255,255,255,0.07);background:rgba(255,255,255,0.03);padding:11px 10px;font-family:inherit;font-size:12px;color:#7a7d9a;cursor:pointer;border-radius:10px;display:flex;align-items:center;gap:7px;transition:all .18s;position:relative;overflow:hidden}
+.op-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(127,119,221,0),rgba(127,119,221,0));transition:background .18s;pointer-events:none}
+.op-btn:hover{border-color:rgba(127,119,221,0.45);color:#c8c6e0;transform:translateY(-2px) scale(1.01);box-shadow:0 4px 16px rgba(127,119,221,0.15)}
+.op-btn:hover::before{background:linear-gradient(135deg,rgba(127,119,221,0.07),rgba(83,74,183,0.05))}
+.op-btn.active{background:linear-gradient(135deg,rgba(127,119,221,0.22),rgba(83,74,183,0.18));color:#d4d0f5;border-color:rgba(127,119,221,0.55);box-shadow:0 4px 20px rgba(127,119,221,0.25),inset 0 1px 0 rgba(255,255,255,0.12);transform:translateY(-1px)}
+.op-btn i{font-size:16px}
+.pip-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-height:34px;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.06);margin-top:12px}
+.pip-step{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(127,119,221,0.14);color:#AFA9EC;border:1px solid rgba(127,119,221,0.28)}
+.pip-arr{font-size:11px;color:#3a3d5c}
+.pip-empty{font-size:11px;color:#3a3d5c}
+.run-btn{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#7F77DD,#534AB7);color:white;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;margin-top:14px;box-shadow:0 4px 24px rgba(127,119,221,0.38),inset 0 1px 0 rgba(255,255,255,0.18);letter-spacing:.02em}
+.run-btn:hover:not(:disabled){background:linear-gradient(135deg,#9189e8,#6557cc);box-shadow:0 8px 32px rgba(127,119,221,0.55),inset 0 1px 0 rgba(255,255,255,0.22);transform:translateY(-2px)}
+.run-btn:active:not(:disabled){transform:translateY(0)}
+.run-btn:disabled{background:rgba(255,255,255,0.05);color:#3a3d5c;cursor:not-allowed;box-shadow:none}
+.idle-box{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:44px 20px;text-align:center;border-radius:12px;background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.05);min-height:150px}
+.idle-icon{font-size:38px;background:linear-gradient(135deg,#2e2a6a,#1a1740);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.idle-txt{font-size:12px;color:#3a3d5c}
+.stat-card{padding:12px 14px;border-radius:10px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px}
+.dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;transition:all .4s}
+.dq{background:#3a3d5c}
+.dp{background:#EF9F27;box-shadow:0 0 10px rgba(239,159,39,0.6)}
+.dd{background:#1D9E75;box-shadow:0 0 10px rgba(29,158,117,0.6)}
+.df{background:#E24B4A;box-shadow:0 0 10px rgba(226,75,74,0.5)}
+#res-img-wrap{display:none;margin-top:14px;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);box-shadow:0 4px 24px rgba(0,0,0,0.5)}
+#res-img{width:100%;max-height:200px;object-fit:contain;background:#0a0612;display:block}
+#dl-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:10px;padding:10px;background:rgba(29,158,117,0.1);color:#1D9E75;border:1px solid rgba(29,158,117,0.3);font-family:inherit;font-size:13px;font-weight:500;text-decoration:none;border-radius:10px;transition:all .15s}
+#dl-btn:hover{background:rgba(29,158,117,0.2);box-shadow:0 4px 16px rgba(29,158,117,0.2)}
+.err-box{margin-top:10px;padding:10px 14px;border-radius:8px;background:rgba(226,75,74,0.07);border:1px solid rgba(226,75,74,0.18);font-size:12px;color:#f09595}
+.api-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:16px;overflow:hidden;transition:border-color .2s,transform .2s}
+.api-card:hover{border-color:rgba(127,119,221,0.2);transform:translateY(-1px)}
+.api-hdr{padding:10px 14px;background:rgba(0,0,0,0.2);border-bottom:1px solid rgba(255,255,255,0.06);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#4a4d6a}
+.api-body{padding:14px;display:flex;flex-direction:column;gap:10px}
+.api-row{display:flex;align-items:center;gap:10px;font-size:12px}
+.m{padding:3px 9px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.05em}
+.mp{background:rgba(127,119,221,0.14);color:#AFA9EC;border:1px solid rgba(127,119,221,0.22)}
+.mg{background:rgba(29,158,117,0.1);color:#5DCAA5;border:1px solid rgba(29,158,117,0.2)}
+.ep{color:#5a5d7a;font-family:'SF Mono',monospace}
+.api-lnk{display:flex;align-items:center;gap:5px;font-size:12px;color:#7F77DD;text-decoration:none;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);margin-top:2px;transition:color .15s}
+.api-lnk:hover{color:#AFA9EC}
+footer{border-top:1px solid rgba(255,255,255,0.06);padding:12px 28px;font-size:11px;color:#3a3d5c;letter-spacing:.04em;position:relative;z-index:1;background:rgba(0,0,0,0.2)}
+</style>
+</head>
+<body>
+<div class="orb1"></div>
+<div class="orb2"></div>
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-icon"><i class="ti ti-photo"></i></div>
+    <div>
+      <div class="logo-text">Image Processor</div>
+      <div class="logo-sub">Transform images via REST API</div>
+    </div>
+  </div>
+  <span class="badge">v1.0 · FastAPI</span>
+</div>
+<div class="main">
+  <div>
+    <div class="card">
+      <div class="sec-label"><span class="num">1</span> Source image</div>
+      <div class="drop-zone" id="dz">
+        <input type="file" id="fi" accept="image/*">
+        <span class="drop-icon"><i class="ti ti-photo-plus"></i></span>
+        <div class="drop-title">Drop your image here</div>
+        <div class="drop-sub">JPG · PNG · GIF · WebP · max 20MB</div>
+      </div>
+      <div id="preview-wrap">
+        <img id="preview-img" alt="Preview">
+        <button id="rm-btn" onclick="removeImg()"><i class="ti ti-x"></i> Remove image</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="sec-label"><span class="num">2</span> Pipeline operations</div>
+      <div class="ops-grid">
+        <button class="op-btn" data-op="flip_horizontal" onclick="tog(this)"><i class="ti ti-arrows-horizontal"></i> Flip horizontal</button>
+        <button class="op-btn" data-op="flip_vertical" onclick="tog(this)"><i class="ti ti-arrows-vertical"></i> Flip vertical</button>
+        <button class="op-btn" data-op="grayscale" onclick="tog(this)"><i class="ti ti-contrast"></i> Grayscale</button>
+        <button class="op-btn" data-op="rotate_left" onclick="tog(this)"><i class="ti ti-rotate-counterclockwise"></i> Rotate left</button>
+        <button class="op-btn" data-op="rotate_right" onclick="tog(this)"><i class="ti ti-rotate-clockwise"></i> Rotate right</button>
+      </div>
+      <div class="pip-row" id="pip"><span class="pip-empty">No operations selected yet</span></div>
+      <button class="run-btn" id="runBtn" disabled onclick="doSubmit()"><i class="ti ti-player-play"></i> Run pipeline</button>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <div class="sec-label"><span class="num">3</span> Result</div>
+      <div class="idle-box" id="idleBox">
+        <span class="idle-icon"><i class="ti ti-diamond"></i></span>
+        <div class="idle-txt">Awaiting job submission</div>
+      </div>
+      <div id="activeBox" style="display:none">
+        <div class="stat-card">
+          <div class="dot dq" id="dot"></div>
+          <span style="color:#9b9db8;font-size:13px">Status: <strong id="stTxt" style="color:#d4d0f5">queued</strong></span>
+          <span style="font-size:11px;color:#3a3d5c;margin-left:auto" id="jidTxt"></span>
+        </div>
+        <div id="res-img-wrap"><img id="res-img" alt="Result"><a id="dl-btn" download="processed.jpg"><i class="ti ti-download"></i> Download result</a></div>
+        <div id="errBox"></div>
+      </div>
+    </div>
+    <div class="api-card">
+      <div class="api-hdr">API endpoints</div>
+      <div class="api-body">
+        <div class="api-row"><span class="m mp">POST</span><span class="ep">/transform</span></div>
+        <div class="api-row"><span class="m mg">GET</span><span class="ep">/jobs/{id}</span></div>
+        <div class="api-row"><span class="m mg">GET</span><span class="ep">/download/{id}</span></div>
+        <a href="/docs" class="api-lnk"><i class="ti ti-external-link" style="font-size:13px"></i> View Swagger docs</a>
+      </div>
+    </div>
+  </div>
+</div>
+<footer>Files auto-expire after 15 minutes · POST /transform returns a job ID immediately</footer>
+<script>
+const API='';let sf=null,pl=[];
+const fi=document.getElementById('fi'),dz=document.getElementById('dz');
+fi.addEventListener('change',e=>{if(e.target.files[0])loadF(e.target.files[0])});
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');if(e.dataTransfer.files[0])loadF(e.dataTransfer.files[0])});
+function loadF(f){sf=f;document.getElementById('preview-img').src=URL.createObjectURL(f);dz.style.display='none';document.getElementById('preview-wrap').style.display='block';upd()}
+function removeImg(){sf=null;fi.value='';dz.style.display='block';document.getElementById('preview-wrap').style.display='none';upd()}
+function tog(btn){const op=btn.dataset.op;if(btn.classList.contains('active')){pl=pl.filter(o=>o!==op);btn.classList.remove('active')}else{pl.push(op);btn.classList.add('active')}rPip();upd()}
+function rPip(){const el=document.getElementById('pip');if(!pl.length){el.innerHTML='<span class="pip-empty">No operations selected yet</span>';return}el.innerHTML=pl.map((op,i)=>`<span class="pip-step">${op.replace(/_/g,' ')}</span>${i<pl.length-1?'<span class="pip-arr">→</span>':''}`).join('')}
+function upd(){document.getElementById('runBtn').disabled=!(sf&&pl.length)}
+function setSt(s){const d=document.getElementById('dot');document.getElementById('stTxt').textContent=s;d.className='dot '+(s==='queued'?'dq':s==='processing'?'dp':s==='done'?'dd':'df')}
+async function doSubmit(){if(!sf||!pl.length)return;document.getElementById('idleBox').style.display='none';document.getElementById('activeBox').style.display='block';document.getElementById('res-img-wrap').style.display='none';document.getElementById('errBox').innerHTML='';document.getElementById('runBtn').disabled=true;setSt('queued');const fd=new FormData();fd.append('image',sf);fd.append('operations',JSON.stringify(pl));try{const r=await fetch(`${API}/transform`,{method:'POST',body:fd});if(!r.ok){const e=await r.json();throw new Error(e.detail||'Submission failed')}const d=await r.json();document.getElementById('jidTxt').textContent=`job: ${d.jobId.slice(0,8)}…`;poll(d.jobId)}catch(err){setSt('failed');document.getElementById('errBox').innerHTML=`<div class="err-box">${err.message}</div>`;document.getElementById('runBtn').disabled=false}}
+async function poll(id){try{const r=await fetch(`${API}/jobs/${id}`);const d=await r.json();setSt(d.status);if(d.status==='done'){const url=`${API}/download/${id}`;document.getElementById('res-img').src=url;document.getElementById('dl-btn').href=url;document.getElementById('res-img-wrap').style.display='block';document.getElementById('runBtn').disabled=false;return}if(d.status==='failed'){document.getElementById('errBox').innerHTML=`<div class="err-box">${d.error||'Processing failed'}</div>`;document.getElementById('runBtn').disabled=false;return}setTimeout(()=>poll(id),600)}catch(e){setSt('failed');document.getElementById('runBtn').disabled=false}}
+</script>
+</body>
+</html>
