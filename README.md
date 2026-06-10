@@ -50,3 +50,68 @@ python run.py
 ```
 
 ### 4. Open in browser
+App:       http://localhost:8000
+API Docs:  http://localhost:8000/docs
+
+---
+
+## 📁 Project Structure
+
+---
+
+## 🔌 REST API
+
+All endpoints served at `http://localhost:8000`. Full interactive docs at `/docs`.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | Serves the frontend |
+| `GET` | `/health` | Health check — returns `{"status": "ok"}` |
+| `GET` | `/operations` | Lists all supported operation names |
+| `POST` | `/transform` | Submit a transform job (returns job ID immediately) |
+| `GET` | `/jobs/{job_id}` | Poll job status |
+| `GET` | `/download/{job_id}` | Download the processed image |
+
+### Submit a job
+
+```bash
+curl -X POST http://localhost:8000/transform \
+  -F "image=@photo.jpg" \
+  -F 'operations=["grayscale","rotate_left"]'
+```
+
+**Response (202 Accepted):**
+```json
+{
+  "jobId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "status": "queued",
+  "pollUrl": "/jobs/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}
+```
+
+### Poll for result
+
+```bash
+curl http://localhost:8000/jobs/a1b2c3d4-e5f6-7890-abcd-ef1234567890
+```
+
+```json
+{
+  "jobId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "status": "done",
+  "operations": ["grayscale", "rotate_left"],
+  "downloadUrl": "/download/a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}
+```
+
+### Download the result
+
+```bash
+curl -O http://localhost:8000/download/a1b2c3d4-e5f6-7890-abcd-ef1234567890
+```
+
+---
+
+## 🏗️ Architecture
+
+The system uses a **4-layer architecture**:
