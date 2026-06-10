@@ -115,3 +115,80 @@ curl -O http://localhost:8000/download/a1b2c3d4-e5f6-7890-abcd-ef1234567890
 ## 🏗️ Architecture
 
 The system uses a **4-layer architecture**:
+
+┌─────────────────────────────────────────┐
+│  HTTP Layer         app/main.py         │  ← Route handlers, validation, file I/O
+├─────────────────────────────────────────┤
+│  Job Management     app/store.py        │  ← Thread-safe in-memory job registry
+├─────────────────────────────────────────┤
+│  Execution Layer    app/worker.py       │  ← Worker thread + cleanup thread
+├─────────────────────────────────────────┤
+│  Processing Layer   app/pipeline.py     │  ← Pure image transform logic (Pillow)
+└─────────────────────────────────────────┘
+
+**Job lifecycle:**
+
+- `POST /transform` creates the job (`queued`) and returns immediately
+- Background worker picks it up, sets `processing`, runs the pipeline
+- On success → `done` + files expire after 15 minutes
+- On error → `failed` + error message stored in job record
+- Cleanup thread deletes expired files and records every 60 seconds
+
+---
+
+## 🖥️ Frontend
+
+Single HTML file (`app/static/index.html`) — no framework, no build step, no npm.
+
+**Three-screen flow:**
+
+1. **Drop Zone** — full-screen drag & drop with animated background
+2. **Pipeline Select** — image thumbnail + 5 operation toggle buttons + live pipeline strip
+3. **Result View** — animated status dot, result image preview, download button
+
+---
+
+## ⚙️ Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Web framework | [FastAPI](https://fastapi.tiangolo.com) |
+| ASGI server | [Uvicorn](https://www.uvicorn.org) |
+| Image processing | [Pillow](https://pillow.readthedocs.io) |
+| File uploads | python-multipart |
+| Frontend | Vanilla HTML / CSS / JS |
+| Language | Python 3.10+ |
+
+---
+
+## 📋 Requirements
+
+- Python **3.10** or higher
+- No Docker, no database, no external services
+
+---
+
+## 🗂️ Error Codes
+
+| HTTP Status | Meaning |
+|-------------|---------|
+| `202` | Job submitted successfully |
+| `400` | Invalid file type, bad operations JSON, or unknown operation name |
+| `404` | Job ID does not exist |
+| `409` | Job exists but not done yet |
+| `410` | Files expired (15 min TTL) |
+| `413` | File exceeds 20MB limit |
+
+---
+
+## 📄 License
+
+Developed as an **Individual Project** for CPSC 5200 Software Architecture at **Seattle University**.
+
+---
+
+## 👤 Author
+
+**Manoj Sai**  
+Seattle University — MS Computer Science  
+[GitHub](https://github.com/Manoj23207)
